@@ -271,20 +271,21 @@ if(!Object.observe){
         }]);
       };
       self.queueUpdates = function Notifier_queueUpdates(updates){
-        var self = this, i = 0, l = updates.length||0, update;
+        var self = this, i = 0, l = updates.length||0, update, updatesCopy;
         for(i=0; i<l; i++){
           update = updates[i];
           _updates.push(update);
         }
+        updatesCopy = _updates.slice();
         if(_updater){
           _clearCheckCallback(_updater);
         }
         _updater = _doCheckCallback(function(){
           _updater = false;
-          self.deliverChangeRecords();
-        });
+          self.deliverChangeRecords(arguments[0]);
+        }.bind(this, updatesCopy));
       };
-      self.deliverChangeRecords = function Notifier_deliverChangeRecords(){
+      self.deliverChangeRecords = function Notifier_deliverChangeRecords(updatesCopy){
         var i = 0, l = _listeners.length,
             //keepRunning = true, removed as it seems the actual implementation doesn't do this
             // In response to BUG #5
@@ -294,14 +295,14 @@ if(!Object.observe){
             var currentUpdates;
             if (_acceptLists[i]) {
               currentUpdates = [];
-              for (var j = 0, updatesLength = _updates.length; j < updatesLength; j++) {
-                if (_acceptLists[i].indexOf(_updates[j].type) !== -1) {
-                  currentUpdates.push(_updates[j]);
+              for (var j = 0, updatesLength = updatesCopy.length; j < updatesLength; j++) {
+                if (_acceptLists[i].indexOf(updatesCopy[j].type) !== -1) {
+                  currentUpdates.push(updatesCopy[j]);
                 }
               }
             }
             else {
-              currentUpdates = _updates;
+              currentUpdates = updatesCopy;
             }
             if (currentUpdates.length) {
               if(_listeners[i]===console.log){
